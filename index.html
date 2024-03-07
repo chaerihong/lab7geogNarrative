@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="description" content="GeoNarrative" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>My Favorite Food Places in Seattle</title>
+  <!-- <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,400;0,500;1,400;1,500&display=swap" /> -->
+  <!-- <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v2.8.1/mapbox-gl.css"> -->
+  <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css"> -->
+  <link rel="stylesheet" href="css/main.css">
+  <script src="https://unpkg.com/scrollama"></script>
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.8.1/mapbox-gl.js"></script>
+</head>
+
+<body>
+  <!-- loading a video cover page -->
+  <section id="cover">
+    <!-- loading a video as the background -->
+    <video class="fullscreen canvas-center" playsinline="" autoplay="" muted="" loop="">
+      <source src="img/restaurant.mp4" type="video/mp4">
+    </video>
+    <div id="intro">
+      <h1>Favorite restaurants in seattle</h1>
+      <h5>Chaeri Hong</h5>
+        <p>GEOG 458 Lab 7 - GeoNarrative</p>
+
+      <div class="footnote">
+        <a class="white-link" target="_blank" href="https://www.pexels.com/video/person-pouring-sauce-on-food-3769033/">Video by Taryn Elliott</a>
+      </div>
+    </div>
+  </section>
+  <!-- a geonarrative will have two major components, a storyboard and a script panel of a series of scenes/actions -->
+  <section id="geonarrative">
+    <!-- a storymap can present differnt types of objects, like map, chart, diagram, etc. -->
+    <div id="storyboard">
+      <!-- create the place holder element for map -->
+      <div id="map"></div>
+    </div>
+
+    <article class="scene" data-scene="0">
+      <h2>Boiling Point</h2>
+      <img class="img" src="img/bp.jpeg" style="width: 50%; height: auto; display: block; margin: 0 auto;"></img>
+      <p>My favorite spicy food in Seattle. There are a lot of soup base and toppings that we can choose.</p>
+    </article>
+    <article class="scene" data-scene="1">
+      <h2>Byrek & Baguette</h2>
+      <img class="img" src="img/byrek.png" style="width: 50%; height: auto; display: block; margin: 0 auto;"></img>
+      <p>My favorite place for sandwich in u-district. I love their salad, too!</p>
+    </article>
+    <article class="scene" data-scene="2">
+      <h2>Red Pepper</h2>
+      <img class="img" src="img/redpepper.jpeg" style="width: 50%; height: auto; display: block; margin: 0 auto;"></img>
+      <p>The best chinese restaurant in U-district! I love their chinese spicy chicken!</p>
+    </article>
+    <article class="scene" data-scene="3">
+      <h2>kobuta and ookami</h2>
+      <img class="img" src="img/kobuta.jpg" style="width: 50%; height: auto; display: block; margin: 0 auto;"></img>
+      <p>The best katsu restaurant in Seattle. I love all menus in Kobuta and Ookami!</p>
+    </article>
+    <article class="scene" data-scene="4">
+      <h2>Palmi</h2>
+      <img class="img" src="img/palmi.jpeg" style="width: 50%; height: auto; display: block; margin: 0 auto;"></img>
+      <p>All you can eat BBQ! We can choose various meats. I love it.</p>
+    </article>
+    <article class="scene" data-scene="5">
+      <h2>Meet korean BBQ</h2>
+      <img class="img" src="img/meet.jpeg" style="width: 50%; height: auto; display: block; margin: 0 auto;"></img>
+      <p>The best Korean BBQ in seattle! The meat is very fresh and it tastes good!</p>
+    </article>
+    <article class="scene fullscreen" data-scene="6">
+      <h2>These restaurants are my favorite places in Seattle! Thank you!</h2>
+    </article>
+
+  </section>
+
+
+  <script>
+    // 1. Declare the maps, script panels, and different thematic layers.
+    let map, scriptPanel = scrollama(), countiesLayer, cultivateLayer;
+
+    // 2. Intialize the layout.
+   
+    history.scrollRestoration = "manual"; // make sure the geo-narrative will be scrolled to the cover page even after a page refresh.
+    window.scrollTo(0, 0); // scroll the geo-narrative to the coverpage
+    adjustStoryboardlSize(); // force a browser window resize.
+    window.addEventListener("resize", adjustStoryboardlSize); // // ask the browser window listen to the resize event, thereby force a viewport resize whenever adjusting the window size.
+
+    // 3. Define Generic window resize listener event
+    function adjustStoryboardlSize() {
+
+      const scenes = document.getElementsByClassName("scene");
+      const storyboard = document.getElementById("storyboard");
+
+      // 3.1 determine the height of each scene element
+      let sceneH = Math.floor(window.innerHeight * 0.75);
+      for (const scene of scenes) {
+        scene.style.height = sceneH + "px";
+      }
+      
+      // 3.2 determin the height of the storyboard.
+      let storyboardHeight = window.innerHeight;
+      let storyboardMarginTop = (window.innerHeight - storyboardHeight) / 2;
+
+      storyboard.style.height = storyboardHeight + "px";
+      storyboard.style.top = storyboardMarginTop + "px"
+
+      // 3.3 tell scrollama/script panel to update new element dimensions
+      scriptPanel.resize();
+    }
+
+    // 4. Initialize the mapbox
+    mapboxgl.accessToken =
+      'pk.eyJ1IjoiY2hhZXJpaG9uZyIsImEiOiJjbHM3aXpqNnUxdGZ4MmtsOGFseXdseDFrIn0.QgJzmwRnSVw86RGevik91w'; // Assign the access token
+   
+    map = new mapboxgl.Map({
+      container: 'map', // container ID
+      style: 'mapbox://styles/mapbox/light-v10',
+      zoom: 15, // starting zoom
+      minZoom: 3,
+      maxZoom: 30,
+      center: [-122.323024, 47.660003], // starting center
+      scrollZoom: false,
+      boxZoom: false,
+      doubleClickZoom: false
+    });  // Declare the map object
+
+    // An alternative way to disable map zoom when using scroll
+    // map.scrollZoom.disable();
+
+
+    // 5. define the asynchronous function to load geojson data and then performs the dependent actions.
+    async function geojsonFetch() {
+
+      // 6 wait till the data are fully loaded.
+
+
+      const urls = ["assets/bp.geojson", "assets/byrek.geojson", "assets/redpepper.geojson", "assets/kobuta.geojson", "assets/palmi.geojson", "assets/meet.geojson"];
+      const responses = await Promise.all(urls.map(url => fetch(url)));
+      const data = await Promise.all(responses.map(response => response.json()));
+
+      const [bp, byrek, redpepper, kobuta, palmi, meet] = data;
+
+      console.log("data loaded")
+
+      // 7. Trigger operations inside of the the ()=> {} funciton while loading the map.
+      map.on('load', () => {
+        console.log("map source and layers")
+
+        // 8. add map source and declare layers.
+        map.addSource('bp-src', {
+          type: 'geojson',
+          data: bp
+        });
+        bpLayer = {
+          'id': 'bp-points',
+          'type': 'circle',
+          'source': 'bp-src',
+          'minzoom': 5,
+          'paint': {
+            'circle-color': 'red',
+            'circle-radius': 8,
+            'circle-opacity': 0.8,
+          }
+        };
+        
+
+        map.addSource('byrek-src', {
+          type: 'geojson',
+          data: byrek
+        });
+        byrekLayer = {
+          'id': 'byrek-points',
+          'type': 'circle',
+          'source': 'byrek-src',
+          'minzoom': 5,
+          'paint': {
+            'circle-color': 'red',
+            'circle-radius': 8,
+            'circle-opacity': 0.8,
+          }
+        };
+
+        map.addSource('redpepper-src', {
+          type: 'geojson',
+          data: redpepper
+        });
+        redpepperLayer = {
+          'id': 'redpepper-points',
+          'type': 'circle',
+          'source': 'redpepper-src',
+          'minzoom': 5,
+          'paint': {
+            'circle-color': 'red',
+            'circle-radius': 8,
+            'circle-opacity': 0.8,
+          }
+        };
+
+        map.addSource('kobuta-src', {
+          type: 'geojson',
+          data: kobuta
+        });
+        kobutaLayer = {
+          'id': 'kobuta-points',
+          'type': 'circle',
+          'source': 'kobuta-src',
+          'minzoom': 5,
+          'paint': {
+            'circle-color': 'red',
+            'circle-radius': 8,
+            'circle-opacity': 0.8,
+          }
+        };
+
+        map.addSource('palmi-src', {
+          type: 'geojson',
+          data: palmi
+        });
+        palmiLayer = {
+          'id': 'palmi-points',
+          'type': 'circle',
+          'source': 'palmi-src',
+          'minzoom': 5,
+          'paint': {
+            'circle-color': 'red',
+            'circle-radius': 8,
+            'circle-opacity': 0.8,
+          }
+        };
+
+        map.addSource('meet-src', {
+          type: 'geojson',
+          data: meet
+        });
+        meetLayer = {
+          'id': 'meet-points',
+          'type': 'circle',
+          'source': 'meet-src',
+          'minzoom': 5,
+          'paint': {
+            'circle-color': 'red',
+            'circle-radius': 8,
+            'circle-opacity': 0.8,
+          }
+        };
+
+        // 9. Initialize the script panel
+        scriptPanel
+          .setup({
+            step: ".scene", // all the scenes.
+            offset: 0.33, // the location of the enter and exit trigger
+            debug: false // toggler on or off the debug mode.
+          })
+          .onStepEnter(handleSceneEnter)
+          .onStepExit(handleSceneExit);
+        
+        function handleSceneEnter(response) {
+
+          var index = response.index; // capture the id of the current scene. 
+
+          if (index === 4) { 
+
+            map.flyTo({
+              center: [-122.323024, 47.660003],
+              zoom: 15,
+
+            }); // fly to a new location
+            
+
+            if (typeof (map.getSource('bp-src')) == 'undefined') {
+              map.addSource('bp-src', {
+                type: 'geojson',
+                data: bp
+              });
+            } else {
+              map.getSource('bp-src').setData(bp);
+
+            }
+
+            if (!map.getLayer("bp-points")) {
+              map.addLayer(bpLayer);
+              console.log("bp");
+            }
+          } else if (index === 5) {
+            map.flyTo({
+              center: [-122.323024, 47.660003],
+              zoom: 15,
+
+            }); // fly to a new location
+          
+            if (typeof (map.getSource('byrek-src')) == 'undefined') {
+              map.addSource('byrek-src', {
+                type: 'geojson',
+                data: byrek
+              });
+            } else {
+              map.getSource('byrek-src').setData(byrek);
+
+            }
+
+            if (!map.getLayer("byrek-points")) {
+              map.addLayer(byrekLayer);
+              console.log('byrek!');
+            }
+
+          } else if (index === 3) {
+            map.flyTo({
+              center: [-122.323024, 47.660003],
+              zoom: 15,
+
+            }); // fly to a new location
+            
+
+            if (typeof (map.getSource('redpepper-src')) == 'undefined') {
+              map.addSource('redpepper-src', {
+                type: 'geojson',
+                data: redpepper
+              });
+            } else {
+              map.getSource('redpepper-src').setData(redpepper);
+
+            }
+
+            if (!map.getLayer("redpepper-points")) {
+              map.addLayer(redpepperLayer);
+            }
+
+          }
+          else if (index === 0) {
+            map.flyTo({
+              center: [-122.323024, 47.660003],
+              zoom: 15,
+
+            }); // fly to a new location
+          
+            if (typeof (map.getSource('kobuta-src')) == 'undefined') {
+              map.addSource('kobuta-src', {
+                type: 'geojson',
+                data: kobuta
+              });
+            } else {
+              map.getSource('kobuta-src').setData(kobuta);
+
+            }
+
+            if (!map.getLayer("kobuta-points")) {
+              map.addLayer(kobutaLayer);
+            }
+
+          } 
+
+          else if (index === 1) {
+            map.flyTo({
+              center: [-122.323024, 47.660003],
+              zoom: 15,
+
+            }); // fly to a new location
+          
+            if (typeof (map.getSource('palmi-src')) == 'undefined') {
+              map.addSource('palmi-src', {
+                type: 'geojson',
+                data: palmi
+              });
+            } else {
+              map.getSource('palmi-src').setData(palmi);
+
+            }
+
+            if (!map.getLayer("palmi-points")) {
+              map.addLayer(palmiLayer);
+            }
+          } 
+
+          else if (index === 2) {
+            map.flyTo({
+              center: [-122.323024, 47.660003],
+              zoom: 15,
+
+            }); // fly to a new location
+          
+            if (typeof (map.getSource('meet-src')) == 'undefined') {
+              map.addSource('meet-src', {
+                type: 'geojson',
+                data: meet
+              });
+            } else {
+              map.getSource('meet-src').setData(meet);
+
+            }
+
+            if (!map.getLayer("meet-points")) {
+              map.addLayer(meetLayer);
+            }
+
+          } 
+
+          else if (index === 6) {
+            map.flyTo({
+              center: [-122.31348192287193, 47.65911977751378],
+              zoom: 16,
+
+            }); // fly to a new location
+  
+            map.setStyle('mapbox://styles/mapbox/satellite-streets-v10');
+          } 
+        }
+
+        // 11. This function performs when a scene exists the storyboard
+        function handleSceneExit(response) {
+          var index = response.index;
+
+          if (index === 4) {
+            if (map.getLayer("bp-points")) {
+              map.removeLayer('bp-points');
+            }
+          } 
+
+          else if (index === 5) {
+            if (map.getLayer("byrek-points")) {
+              map.removeLayer('byrek-points');
+            }
+          }
+
+          else if (index === 3) {
+            if (map.getLayer("redpepper-points")) {
+              map.removeLayer('redpepper-points');
+            }
+          }
+
+          else if (index === 0) {
+            if (map.getLayer("kobuta-points")) {
+              map.removeLayer('kobuta-points');
+            }
+          }
+
+          else if (index === 1) {
+            if (map.getLayer("palmi-points")) {
+              map.removeLayer('palmi-points');
+            }
+          }
+
+          else if (index === 2) {
+            if (map.getLayer("meet-points")) {
+              map.removeLayer('meet-points');
+            }
+          }
+
+          else if (index === 6) {
+            map.setStyle('mapbox://styles/mapbox/light-v10');
+          }
+
+        }
+      });
+
+    };
+
+    // 5 call the data loading function.
+    geojsonFetch();
+  </script>
+</body>
+
+</html>
